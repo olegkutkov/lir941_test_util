@@ -7,6 +7,8 @@
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <math.h>
+#include <stdlib.h>
 #include "lir941r_user.h"
 
 #define NUM_OF_CHANNELS 4
@@ -14,7 +16,10 @@
 static volatile int run_program = 1;
 
 static int fds[NUM_OF_CHANNELS];
-static unsigned int ch_data[NUM_OF_CHANNELS];
+static unsigned short ch_data[NUM_OF_CHANNELS];
+
+static const unsigned short count_per_angle = 65535 / 360;
+
 
 void intHandler(int n)
 {
@@ -26,7 +31,18 @@ int main()
 	char devpath[14];
 	unsigned int buf = 0;
 	ssize_t rdres = 0;
-	int i;
+	int i, acnt = 0;
+
+	double jd;
+
+	struct ln_lnlat_posn observer;
+
+	struct lnh_equ_posn  hequ;
+	struct ln_equ_posn equ_data;
+	struct ln_hrz_posn altaz_data;
+
+	observer.lat = lat;
+	observer.lng = lon;
 
 	printf("Starting program...\n");
 
@@ -52,6 +68,9 @@ int main()
 			printf("Failed to set LIR941_CHANNEL_DATAWIDTH, fd = %d, devnode = %d, error: %s\n", fds[i], i, strerror(errno));
 		}
 
+		ioctl(fds[i], LIR941_CHANNEL_SPEED, 66);  //  sys_clk = 33000000,  33000000 / 66 = 500000 = 0.5 Mhz
+		ioctl(fds[i], LIR941_CHANNEL_PAUSE, 1155);   // 35 us, (35 / 33.3 * 1000) = 1155
+
 		printf("Starting data acquisition for channel %d\n", i);
 
 		ioctl(fds[i], LIR941_START_CHANNEL_POLLING, 0);
@@ -67,7 +86,7 @@ int main()
 				rdres = read(fds[i], (void*)&buf, sizeof(buf));
 
 				if (rdres == sizeof(buf)) {
-					ch_data[i] = buf;
+					ch_data[i] = ((unsigned short)buf) / count_per_angle;
 					continue;
 				}
 			}
@@ -75,12 +94,10 @@ int main()
 			ch_data[i] = 0;
 		}
 
-		printf("\rCH0 RAW DATA = %d    CH1 RAW DATA = %d    CH2 RAW DATA = %d    CH3 RAW DATA = %d"
+		printf("CH0 RAW DATA = %d    CH1 RAW DATA = %d  CH2 RAW DATA = %d    CH3 RAW DATA = %d\n"
 				, ch_data[0], ch_data[1], ch_data[2], ch_data[3]);
 
-		fflush(stdout);
-
-		sleep(1);
+		usleep(500000);
 	}
 
 	printf("\n\n");
@@ -95,5 +112,7 @@ int main()
 	}
 
 	printf("\nProgram finished\n");
+
+	return 0;
 }
 
