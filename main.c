@@ -55,10 +55,6 @@ int main()
 
 	double jd;
 
-	struct lnh_equ_posn  hequ;
-	struct ln_equ_posn equ_data;
-	struct ln_hrz_posn altaz_data;
-
 	printf("Starting program...\n");
 
 	for (i = 0; i < NUM_OF_CHANNELS; ++i) {
