@@ -7,7 +7,7 @@ CC := gcc
 PROGRAM = test_client
 SRC := main.c
 CFLAGS := -Wall
-LDFLAG := -lnova -lm
+LDFLAG := -lm
 
 all: $(PROGRAM)
 
