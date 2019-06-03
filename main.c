@@ -55,14 +55,9 @@ int main()
 
 	double jd;
 
-	struct ln_lnlat_posn observer;
-
 	struct lnh_equ_posn  hequ;
 	struct ln_equ_posn equ_data;
 	struct ln_hrz_posn altaz_data;
-
-	observer.lat = lat;
-	observer.lng = lon;
 
 	printf("Starting program...\n");
 
